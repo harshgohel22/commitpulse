@@ -1,5 +1,5 @@
 'use client';
-
+import { trackUser } from '@/utils/tracking';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useRef, useState, useEffect } from 'react';
@@ -64,20 +64,6 @@ const Icons = {
     </svg>
   ),
 };
-
-function trackUser(name: string) {
-  const payload = JSON.stringify({ username: name });
-  // sendBeacon is truly fire-and-forget — it doesn't block navigation
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon('/api/track-user', new Blob([payload], { type: 'application/json' }));
-  } else {
-    fetch('/api/track-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload,
-    }).catch(console.error);
-  }
-}
 
 export default function LandingPage() {
   const [username, setUsername] = useState('');
