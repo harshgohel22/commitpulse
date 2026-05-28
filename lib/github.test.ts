@@ -782,6 +782,7 @@ describe('getWrappedData', () => {
   beforeEach(() => {
     vi.spyOn(global, 'fetch');
   });
+
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -789,15 +790,23 @@ describe('getWrappedData', () => {
   it('returns wrapped statistics and top language correctly', async () => {
     vi.mocked(fetch).mockImplementation(async (url) => {
       const urlStr = url.toString();
-      // Return 2 TS repos, 1 Rust repo
-      if (urlStr.includes('/repos'))
+
+      if (urlStr.includes('/repos')) {
         return mockResponse([
           { language: 'TypeScript' },
           { language: 'TypeScript' },
           { language: 'Rust' },
         ]);
+      }
+
       return mockResponse({
-        data: { user: { contributionsCollection: { contributionCalendar: mockCalendar } } },
+        data: {
+          user: {
+            contributionsCollection: {
+              contributionCalendar: mockCalendar,
+            },
+          },
+        },
       });
     });
 
@@ -805,5 +814,36 @@ describe('getWrappedData', () => {
 
     expect(result.topLanguage).toBe('TypeScript');
     expect(result.totalContributions).toBe(mockCalendar.totalContributions);
+  });
+
+  it('passes the correct from and to date range to GitHub contributions fetch', async () => {
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      const urlStr = url.toString();
+
+      if (urlStr.includes('/repos')) {
+        return mockResponse([]);
+      }
+
+      return mockResponse({
+        data: {
+          user: {
+            contributionsCollection: {
+              contributionCalendar: mockCalendar,
+            },
+          },
+        },
+      });
+    });
+
+    await getWrappedData('octocat', '2024');
+
+    const graphQLCall = vi
+      .mocked(fetch)
+      .mock.calls.find(([url]) => url.toString().includes('/graphql'));
+
+    const body = JSON.parse(graphQLCall?.[1]?.body as string);
+
+    expect(body.variables.from).toBe('2024-01-01T00:00:00Z');
+    expect(body.variables.to).toBe('2024-12-31T23:59:59Z');
   });
 });
