@@ -9,8 +9,6 @@ export default function Loading() {
         <p className="text-sm text-zinc-400 dark:text-zinc-500">
           Fetching contributor data from GitHub
         </p>
-
-        <span className="sr-only">Loading contributors</span>
       </div>
     </div>
   );
